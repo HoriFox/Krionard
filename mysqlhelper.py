@@ -1,14 +1,6 @@
 import pymysql
 
-#Примеры использования DBConnection
-#            table    replace  field_change_time  kwargs_insert_value
-#link.insert('users', True, 'ChangeTime', UserId=request_data['session']['user_id'], FullName='Hello')
-#            table    where
-#link.select('users', disc(UserId=...))
-
 class DBConnection:
-    connect = None
-
     def __init__(self, **kwargs):
         self.connect = pymysql.connect(**kwargs)
 
@@ -45,11 +37,4 @@ class DBConnection:
             return result
         except pymysql.Error as err:
             print('Error', err)
-
-    def get_version(self):
-        cur = self.connect.cursor()
-        cur.execute("SELECT VERSION()")
-        version = cur.fetchone()
-        return version[0]
-
 

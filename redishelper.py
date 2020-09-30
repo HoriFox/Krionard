@@ -10,8 +10,6 @@ def convert(data):
   if isinstance(data, set):        return set(map(convert, data))
 
 class RedisConnection:
-    connect = None
-
     def __init__(self, **kwargs):
         self.connect = redis.Redis(**kwargs)
 
@@ -42,15 +40,4 @@ class RedisConnection:
 
     def get_connect(self):
         return self.connect
-
-
-
-#conn = redis.Redis('localhost')
-#user = {"Name":"Тагир", "Company":"SCTL", "Address":"Mumbai", "Location":"RCP"}
-#result = conn.hset("pythonDict", None, None, user)
-#print(result)
-#value = convert(conn.hgetall("pythonDict"))
-#print(value)
-
-
 
