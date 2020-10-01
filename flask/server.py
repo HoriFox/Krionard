@@ -1,19 +1,13 @@
 from flask import Flask
 from utils import *
 from plugins import Skill
-import logging
-from flask.logging import default_handler
 
 class FlaskServer (Flask):
     def __init__(self, import_name, config_file, vocabulary_file):
         super(FlaskServer, self).__init__(import_name)
         self.skill_config = self.load_config(config_file)
         self.vocabulary = self.load_vocabulary(vocabulary_file)
-        self.handler = logging.StreamHandler(sys.stderr)
-        self.logger.removeHandler(default_handler)
-        self.logger.addHandler(self.handler)
-        self.logger.setLevel(logging.DEBUG)
-        self.skill = Skill(self.skill_config, self.vocabulary, self.logger)
+        self.skill = Skill(self.skill_config, self.vocabulary)
 
     def load_config(self, path):
         if not path:

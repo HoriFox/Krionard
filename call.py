@@ -8,7 +8,7 @@ import sys
 '''
 
 def post_test(message = None):
-    with open('/usr/bin/assol/request.json', 'r') as f:
+    with open('/home/horifox/assol/request.json', 'r') as f:
         request = json.load(f)
 
         request['request']['command'] = message
