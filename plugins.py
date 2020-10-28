@@ -7,6 +7,7 @@ from similarity import preparer_instruction, lev_dis
 from utils import *
 from plugins import *
 from flask import request, jsonify
+import requests
 
 class Skill():    
     def __init__(self, config, vocabulary, logger):
@@ -73,7 +74,8 @@ class Skill():
             text_answer, voice_answer = self.output_conf(theme='canihelp', prof=profile)
             self.session.new_session(user_id)
         else:
-            text_answer, voice_answer = self.switch_command(user_id, token_instruction)
+            is_end_dialog = True
+            text_answer, voice_answer = self.switch_command(user_id, token_instruction, unknown_tokens)
 
             #Добавочная информация режима отладки
             session_profile = self.session.get_session(user_id)
@@ -134,51 +136,65 @@ class Skill():
             main_instruction = tokens
         return main_instruction
 
-    def switch_command(self, user_id, token_instruction):
+    def switch_command(self, user_id, token_instruction, unknown_tokens):
         instruction = ' '.join(token_instruction)
         function = {'turnon debug' : self.debug_param, 
                     'turnoff debug' : self.debug_param, 
                     'what can' : self.what_can, 
-                    'turnon light' : self.relay, 
-                    'turnoff light' : self.relay, 
-                    'turnon powersocket' : self.relay, 
-                    'turnoff powersocket' : self.relay
+                    'turnon' : self.relay, 
+                    'turnoff' : self.relay, 
                     }
-        # 'itsall' : its_all TO DO
-        text_answer, voice_answer = function[instruction](user_id, token_instruction)
 
-        if text_answer == str() and voice_answer == str():
+        text_answer, voice_answer = '', ''
+        command_worked = False
+        try:
+            text_answer, voice_answer = function[instruction](user_id, token_instruction, unknown_tokens)
+        except KeyError:
+            # default block switch
+            pass
+        else:
+            command_worked = True
+
+        if command_worked == False:
             self.log.info('ВЫВОД: не нашла соотвествий')
             text_answer = voice_answer = random.choice(self.vocabulary['output']['dontunderstand'])
             
         return text_answer, voice_answer
 
-    def debug_param(self, user_id, token_instruction):
+    def debug_param(self, user_id, token_instruction, unknown_tokens):
         stage = token_instruction[0]
-        if stage == 'turnon':
-            result = self.session.edit_session(user_id, 'debug', 'true')
-            self.log.info('ВЫВОД: Режим отладки: True, SessionOK: %s', result)
-            text_answer = voice_answer = 'включаю режим отладки'
-        if stage == 'turnoff':
-            result = self.session.edit_session(user_id, 'debug', 'false')
-            self.log.info('ВЫВОД: Режим отладки: False, SessionOK: %s', result)
-            text_answer = voice_answer = 'выключила режим отладки'
+        valueDebug = 'true' if stage == 'turnon' else 'false'
+        result = self.session.edit_session(user_id, 'debug', valueDebug)
+        self.log.info('ВЫВОД: Режим отладки: %s, SessionOK: %s' % (valueDebug, result))
+        text_answer = voice_answer = '%s режим отладки' % (valueDebug)
         return text_answer, voice_answer
 
-    def what_can(self, user_id, token_instruction):
+    def what_can(self, user_id, token_instruction, unknown_tokens):
         self.log.info('ВЫВОД: Отвечает, что Ассоль умеет')
         text_answer, voice_answer = self.output_conf(theme='whatican')
         return text_answer, voice_answer
 
-    def relay(self, user_id, token_instruction):
+    def relay(self, user_id, token_instruction, unknown_tokens):
         stage = token_instruction[0]
-        relay_type = token_instruction[1]
-        # relay_name = token_instruction[2]
-        if stage == 'turnon':
-            self.log.info('ВЫВОД: включает %s', relay_type)
-            text_answer = voice_answer = '{} {}'.format(random.choice(self.vocabulary['output']['turnon']), relay_type)
-        if stage == 'turnoff':
-            self.log.info('ВЫВОД: выключает %s', relay_type)
-            text_answer = voice_answer = '{} {}'.format(random.choice(self.vocabulary['output']['turnoff']), relay_type)
+        mayby_relay_name = ' '.join(unknown_tokens)
+        text_answer, voice_answer = '', ''
+
+        # Узнаем по кусочку дополнительного после тэга текста ip устройства из базы данных
+        res = requests.post('http://127.0.0.1:4050/data', json={'function': 'get_ip_by_name', 'relayname': mayby_relay_name}) 
+        responseText = res.json()
+        
+        # Если устройство найдено в единичном варианте, значит он нашёл более-менее похожее (не 0 и не много, а 1)
+        if len(responseText) == 1:
+            ip_module = responseText[0]['ModuleIp']
+            self.log.info('LOGIC: Полученное по токену [%s] IP устройства [%s]' % (mayby_relay_name, ip_module))
+            valueRelay = '1' if stage == 'turnon' else '0'
+            res = requests.post('http://127.0.0.1:4050', json={'type': 'relay', 'ip': ip_module, 'value': valueRelay})
+            if res.text == 'good':
+                self.log.info('ВЫВОД: %s реле' % (stage))
+            elif res.text == 'error-connection-ip':
+                self.log.info('ВЫВОД: не смогла обратиться по IP адресу')
+                text_answer = voice_answer = 'Не смогла обратиться по адресу устройства'
+        else:
+            text_answer = voice_answer = 'Я не смогла определить нужное устройство'
         return text_answer, voice_answer
 
