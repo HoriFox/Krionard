@@ -119,7 +119,7 @@ class Skill():
     #Получаем всю информацию о пользователе, что производит запрос
     def get_profile(self, user_id):
         link = DBConnection(user=self.config['user_mysql'], password=self.config['password_mysql'],
-                            host=self.config['host_mysql'], database=self.config['database_mysql'])
+                            host=self.config['host_mysql'], host=self.config['port_mysql'], database=self.config['database_mysql'])
         user_row = link.select('users', dict(UserId=user_id))
         if len(user_row) > 0:
             return user_row[0]

@@ -1,0 +1,10 @@
+{
+"host_redis":"",
+"port_redis":"",
+"user_mysql":"marusyatech",
+"password_mysql":"",
+"host_mysql":"127.0.0.1",
+"port_mysql":"3307",
+"database_mysql":"marusyatech",
+"nameskill":"ассоль"
+}
