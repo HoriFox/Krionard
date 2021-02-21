@@ -17,12 +17,12 @@ class FlaskServer (Flask):
 
     def load_config(self, path):
         if not path:
-            path='config/skill.config.json'
+            path='/etc/assol/skill.config.json'
         return load_json(path)
 
     def load_vocabulary(self, path):
         if not path:
-            path='config/vocabulary.json'
+            path='/etc/assol/skill.vocabulary.json'
         return load_json(path)
 
     def setup_route(self):
