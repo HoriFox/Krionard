@@ -10,7 +10,7 @@ import sys
 
 parser = argparse.ArgumentParser(description='Marusya skill unittest executor')
 parser.add_argument('-t', '--text', metavar='TEXT', type=str,
-                    default='включи навык ассоль стандартная команда после включающей',
+                    default='включи навык ассоль включи свет',
                     help='Command string from Marusya')
 parser.add_argument('-c', '--count', metavar='N', type=int,
                     default=3,
