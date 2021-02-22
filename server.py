@@ -15,7 +15,7 @@ class FlaskServer (Flask):
 		self.logger.setLevel(logging.DEBUG)
 		self.skill = Skill(self.skill_config, self.vocabulary, self.logger)
 
-	def load_config(self, path):
+	def load_config(self, input_path=None):
 		skill_config = {
 				'host_redis':'127.0.0.1',
 				'port_redis':'6379',
@@ -25,16 +25,17 @@ class FlaskServer (Flask):
 				'port_mysql':'3306',
 				'database_mysql':'marusyatech',
 				'skillname':'ассоль'}
-		path = '/etc/assol/skill.config.json'
+		path = input_path or '/etc/assol/skill.config.json'
 		try:
 			with open(path) as file:
 				data = load_json(path)
 				skill_config.update(data)
 		except:
 			eprint('[!]Cant load config from %s' % path)
+		self.show_load_log('config', skill_config)
 		return skill_config
 
-	def load_vocabulary(self, path):
+	def load_vocabulary(self, input_path=None):
 		vocabulary = {
 				'input':{'turnon debug':['включить дебаг'],
 					'turnoff  debug':['выключить дебаг'],
@@ -46,14 +47,20 @@ class FlaskServer (Flask):
 					'bye':['пока'],
 					'dontunderstand':['я не понимаю']}}
 
-		path='/etc/assol/skill.vocabulary.json'
+		path = input_path or '/etc/assol/skill.vocabulary.json'
 		try:
 			with open(path) as file:
 				data = load_json(path)
 				vocabulary.update(data)
 		except:
 			eprint('[!]Cant load vocabulary from %s' % path)
+		self.show_load_log('vocabulary', vocabulary)
 		return vocabulary
+
+	def show_load_log(self, name, config):
+		eprint('[!]Load %s file' % name)
+		for key in config:
+			eprint('%s - %s' % (key, config[key]))
 
 	def setup_route(self):
 		self.add_url_rule('/', "run_skill", self.skill.run_skill, methods=['POST'])
