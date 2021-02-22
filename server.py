@@ -17,14 +17,14 @@ class FlaskServer (Flask):
 
 	def load_config(self, input_path=None):
 		skill_config = {
-				'host_redis':'127.0.0.1',
-				'port_redis':'6379',
-				'user_mysql':'marusyatech',
-				'password_mysql':'password',
-				'host_mysql':'127.0.0.1',
-				'port_mysql':'3306',
-				'database_mysql':'marusyatech',
-				'skillname':'ассоль'}
+				'host_redis': '127.0.0.1',
+				'port_redis': 6379,
+				'user_mysql': 'marusyatech',
+				'password_mysql': 'password',
+				'host_mysql': '127.0.0.1',
+				'port_mysql': 3306,
+				'database_mysql': 'marusyatech',
+				'skillname': 'ассоль'}
 		path = input_path or '/etc/assol/skill.config.json'
 		try:
 			with open(path) as file:
