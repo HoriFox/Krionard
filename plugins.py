@@ -15,12 +15,10 @@ class Skill():
 		self.vocabulary = vocabulary
 		self.log = logger
 
-	def run_skill(self, _request = None):
+	def run_skill(self):
 		self.log.info('\n--> REQUEST CAME')
 		start_time = time.time()
-		if _request is None:
-			_request = request.json
-		json_request = _request
+		json_request = request.json
 		text_answer, text_answer_tts, is_end_session = self.compute_module(json_request)
 		answer = {
 			"response": {
@@ -40,7 +38,6 @@ class Skill():
 	def get_info(self):
 		return jsonify({'endpoints': [{'POST /': 'Marusya\'s skill API'}, {'GET /': 'Info'}]})
 
-	#Compute
 	def compute_module(self, request_data):
 		text_answer = ''
 		voice_answer = ''
@@ -89,8 +86,10 @@ class Skill():
 		self.log.debug('COMPUTE MODULE FINISHED')
 		return text_answer, voice_answer, is_end_dialog
 
-	#Randomazer
 	def output_conf(self, **data):
+		"""
+		Output randomazer by theme
+		"""
 		random.seed()
 		text_answer, voice_answer = None, None
 
@@ -116,8 +115,10 @@ class Skill():
 
 		return text_answer, voice_answer
 
-	#Получаем всю информацию о пользователе, что производит запрос
 	def get_profile(self, user_id):
+		"""
+		Получаем всю информацию о пользователе, что производит запрос
+		"""
 		link = DBConnection(user=self.config['user_mysql'],
 							password=self.config['password_mysql'],
 							host=self.config['host_mysql'],
@@ -129,8 +130,10 @@ class Skill():
 		else:
 			return None
 
-	#Отсекатор технических команд от команды запуска
 	def slice_instruction(self, tokens):
+		"""
+		Отсекатор технических команд от команды запуска
+		"""
 		main_instruction = []
 		nameskill = self.config['skillname']
 		if nameskill in tokens:
@@ -140,13 +143,16 @@ class Skill():
 		return main_instruction
 
 	def switch_command(self, user_id, token_instruction, unknown_tokens):
+		"""
+		Метод переключения между командами.
+		"""
 		instruction = ' '.join(token_instruction)
 		function = {'turnon debug' : self.debug_param,
-					'turnoff debug' : self.debug_param,
-					'what can' : self.what_can,
-					'turnon' : self.relay,
-					'turnoff' : self.relay,
-					}
+				'turnoff debug' : self.debug_param,
+				'what can' : self.what_can,
+				'turnon' : self.relay,
+				'turnoff' : self.relay,
+				}
 
 		text_answer, voice_answer = '', ''
 		command_worked = False
@@ -159,7 +165,7 @@ class Skill():
 			command_worked = True
 
 		if command_worked == False:
-			self.log.info('ВЫВОД: не нашла соотвествий')
+			self.log.info('ВЫВОД: не поняла команду, странная комбинация')
 			text_answer = voice_answer = random.choice(self.vocabulary['output']['dontunderstand'])
 
 		return text_answer, voice_answer
@@ -203,12 +209,12 @@ class Skill():
 					self.log.info('ВЫВОД: %s реле' % (stage))
 				elif res.text == 'error-connection-ip':
 					self.log.info('ВЫВОД: не смогла обратиться по IP адресу')
-					text_answer = voice_answer = 'Не смогла обратиться по адресу устройства'
+					text_answer = voice_answer = random.choice(self.vocabulary['output']['couldnotapply'])
 			except Exception as err:
 				self.log.error('ОШИБКА: Failed to update device state: {}', err)
 				text_answer = voice_answer = 'Ошибка запроса к API'
 		else:
-			text_answer = voice_answer = 'Я не смогла определить нужное устройство'
+			text_answer = voice_answer = random.choice(self.vocabulary['output']['didnotfind'])
 
 		self.log.debug('ДЕЙСТВИЕ: RELAY FUNCTION FINISHED')
 		return text_answer, voice_answer

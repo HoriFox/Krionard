@@ -22,7 +22,7 @@ parser.add_argument('-p', '--port', type=int,
                     default=5000,
                     help='Server port')
 parser.add_argument('-r', '--request', type=str,
-                    default='request.json',
+                    default='test/request.json',
                     help='Path to request JSON file')
 args = parser.parse_args()
 

@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
 	tokens = sys.argv[1].split(' ')
 	vocabulary = {}
-	with open('/etc/assol/vocabulary.json', 'r') as f:
+	with open('/etc/assol/skill.vocabulary.json', 'r') as f:
 		vocabulary = json.loads(f.read())
 
 	for i in range(1, 11):
