@@ -64,9 +64,10 @@ class FlaskServer (Flask):
 		eprint('[!]Load %s file' % name)
 		for key in config:
 			if 'password' in key:
-				eprint('%s - %s' % (key, hash(config[key])))
+				value = hash(config[key])
 			else:
-				eprint('%s - %s' % (key, config[key]))
+				value = config[key]
+			eprint('%s - %s' % (key, value))
 
 	def setup_route(self):
 		self.add_url_rule('/', "run_skill", self.skill.run_skill, methods=['POST'])
