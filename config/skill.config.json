@@ -1,10 +1,12 @@
 {
-"host_redis":"127.0.0.1",
-"port_redis":"6379",
-"user_mysql":"marusyatech",
-"password_mysql":"",
-"host_mysql":"127.0.0.1",
-"port_mysql":"3307",
-"database_mysql":"marusyatech",
-"skillname":"ассоль"
+	"host_redis": "127.0.0.1",
+	"port_redis": 6379,
+	"user_mysql": "marusyatech",
+	"password_mysql": "",
+	"host_mysql": "127.0.0.1",
+	"port_mysql": 3306,
+	"database_mysql": "marusyatech",
+	"skillname": "ассоль",
+	"smarthome_addr": "127.0.0.1",
+	"smarthome_port": 4050
 }

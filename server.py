@@ -24,14 +24,17 @@ class FlaskServer (Flask):
 				'host_mysql': '127.0.0.1',
 				'port_mysql': 3306,
 				'database_mysql': 'marusyatech',
-				'skillname': 'ассоль'}
+				'skillname': 'ассоль',
+				'smarthome_addr': '127.0.0.1',
+				'smarthome_port': 4050,
+		}
 		path = input_path or '/etc/assol/skill.config.json'
 		try:
 			with open(path) as file:
 				data = load_json(path)
 				skill_config.update(data)
-		except:
-			eprint('[!]Cant load config from %s' % path)
+		except Exception as err:
+			eprint('[!]Cant load config from %s: %s' % (path, err))
 		self.show_load_log('config', skill_config)
 		return skill_config
 

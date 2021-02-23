@@ -9,7 +9,7 @@ from plugins import *
 from flask import request, jsonify
 import requests
 
-class Skill():    
+class Skill():
     def __init__(self, config, vocabulary, logger):
         self.config = config
         self.vocabulary = vocabulary
@@ -68,6 +68,7 @@ class Skill():
 
         #Получаем контекст
         self.session = RedisConnection(host=self.config['host_redis'], port=self.config['port_redis'], db=0)
+        self.log.debug('REDIS CONNECTION INITED')
 
         #Если инструкции пустые, то спросить, что пользователь хочет
         if len(token_instruction) == 0:
@@ -87,6 +88,7 @@ class Skill():
                             ins=instruction,text=text_answer, voice=voice_answer)
                 self.session.edit_session(user_id, 'history', instruction)
 
+        self.log.debug('COMPUTE MODULE FINISHED')
         return text_answer, voice_answer, is_end_dialog
 
     #Randomazer
@@ -141,11 +143,11 @@ class Skill():
 
     def switch_command(self, user_id, token_instruction, unknown_tokens):
         instruction = ' '.join(token_instruction)
-        function = {'turnon debug' : self.debug_param, 
-                    'turnoff debug' : self.debug_param, 
-                    'what can' : self.what_can, 
-                    'turnon' : self.relay, 
-                    'turnoff' : self.relay, 
+        function = {'turnon debug' : self.debug_param,
+                    'turnoff debug' : self.debug_param,
+                    'what can' : self.what_can,
+                    'turnon' : self.relay,
+                    'turnoff' : self.relay,
                     }
 
         text_answer, voice_answer = '', ''
@@ -161,7 +163,7 @@ class Skill():
         if command_worked == False:
             self.log.info('ВЫВОД: не нашла соотвествий')
             text_answer = voice_answer = random.choice(self.vocabulary['output']['dontunderstand'])
-            
+
         return text_answer, voice_answer
 
     def debug_param(self, user_id, token_instruction, unknown_tokens):
@@ -178,25 +180,35 @@ class Skill():
         return text_answer, voice_answer
 
     def relay(self, user_id, token_instruction, unknown_tokens):
+        self.log.debug('RELAY FUNCTION ENTRY POINT')
         stage = token_instruction[0]
         mayby_relay_name = ' '.join(unknown_tokens)
         text_answer, voice_answer = '', ''
+        smart_home_baseurl = 'http://{}:{}'.format(self.config['smarthome_addr'], self.config['smarthome_port'])
 
-        # Узнаем по кусочку дополнительного после тэга текста ip устройства из базы данных
-        res = requests.post('http://127.0.0.1:4050/data', json={'function': 'get_ip_by_name', 'relayname': mayby_relay_name}) 
-        responseText = res.json()
-        
+        try:
+            # Узнаем по кусочку дополнительного после тэга текста ip устройства из базы данных
+            res = requests.post(smart_home_baseurl + '/data', json={'function': 'get_ip_by_name', 'relayname': mayby_relay_name}) 
+            responseText = res.json()
+        except Exception as err:
+            self.log.error('ERROR: Failed to get device: {}'.format(err))
+            responseText = []
+
         # Если устройство найдено в единичном варианте, значит он нашёл более-менее похожее (не 0 и не много, а 1)
         if len(responseText) == 1:
             ip_module = responseText[0]['ModuleIp']
             self.log.info('LOGIC: Полученное по токену [%s] IP устройства [%s]' % (mayby_relay_name, ip_module))
             valueRelay = '1' if stage == 'turnon' else '0'
-            res = requests.post('http://127.0.0.1:4050', json={'type': 'relay', 'ip': ip_module, 'value': valueRelay})
-            if res.text == 'good':
-                self.log.info('ВЫВОД: %s реле' % (stage))
-            elif res.text == 'error-connection-ip':
-                self.log.info('ВЫВОД: не смогла обратиться по IP адресу')
-                text_answer = voice_answer = 'Не смогла обратиться по адресу устройства'
+            try:
+                res = requests.post(smart_home_baseurl, json={'type': 'relay', 'ip': ip_module, 'value': valueRelay})
+                if res.text == 'good':
+                    self.log.info('ВЫВОД: %s реле' % (stage))
+                elif res.text == 'error-connection-ip':
+                    self.log.info('ВЫВОД: не смогла обратиться по IP адресу')
+                    text_answer = voice_answer = 'Не смогла обратиться по адресу устройства'
+            except Exception as err:
+                self.log.error('ERROR: Failed to update device state: {}', err)
+                text_answer = voice_answer = 'Ошибка запроса к API'
         else:
             text_answer = voice_answer = 'Я не смогла определить нужное устройство'
         return text_answer, voice_answer
