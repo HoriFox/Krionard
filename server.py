@@ -15,7 +15,7 @@ class FlaskServer (Flask):
 		self.logger.setLevel(logging.DEBUG)
 		self.skill = Skill(self.skill_config, self.vocabulary, self.logger)
 
-	def load_config(self, input_path=None):
+	def load_config(self, path):
 		skill_config = {
 				'host_redis': '127.0.0.1',
 				'port_redis': 6379,
@@ -28,17 +28,21 @@ class FlaskServer (Flask):
 				'smarthome_addr': '127.0.0.1',
 				'smarthome_port': 4050,
 		}
-		path = input_path or '/etc/assol/skill.config.json'
+		load_status = True
 		try:
 			with open(path) as file:
 				data = load_json(path)
 				skill_config.update(data)
 		except Exception as err:
-			eprint('[!]Cant load config from %s: %s' % (path, err))
+			eprint('\n[!]Cant load config from %s: %s' % (path, err))
+			eprint('[!]Load default config\n')
+			load_status = False
+		if load_status:
+			eprint('\n[!]Load config from %s\n' % path)
 		self.show_load_log('config', skill_config)
 		return skill_config
 
-	def load_vocabulary(self, input_path=None):
+	def load_vocabulary(self, path):
 		vocabulary = {
 				'input':{'turnon debug':['включить дебаг'],
 					'turnoff  debug':['выключить дебаг'],
@@ -49,25 +53,23 @@ class FlaskServer (Flask):
 					'whatican':'я навык умного дома ассоль',
 					'bye':['пока'],
 					'dontunderstand':['я не понимаю']}}
-
-		path = input_path or '/etc/assol/skill.vocabulary.json'
+		load_status = True
 		try:
 			with open(path) as file:
 				data = load_json(path)
 				vocabulary.update(data)
-		except:
-			eprint('[!]Cant load vocabulary from %s' % path)
-		self.show_load_log('vocabulary', vocabulary)
+		except Exception as err:
+			eprint('\n[!]Cant load vocabulary from %s: %s' % (path, err))
+			eprint('[!]Load default vocabulary\n')
+			load_status = False
+		if load_status:
+			eprint('\n[!]Load vocabulary from %s\n' % path)
 		return vocabulary
 
 	def show_load_log(self, name, config):
-		eprint('[!]Load %s file' % name)
 		for key in config:
-			if 'password' in key:
-				value = hash(config[key])
-			else:
-				value = config[key]
-			eprint('%s - %s' % (key, value))
+			value = hash(config[key]) if ('password' in key) else config[key]
+			eprint('[C]%s - %s' % (key, value))
 
 	def setup_route(self):
 		self.add_url_rule('/', "run_skill", self.skill.run_skill, methods=['POST'])
