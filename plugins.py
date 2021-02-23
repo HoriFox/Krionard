@@ -188,7 +188,7 @@ class Skill():
 
         try:
             # Узнаем по кусочку дополнительного после тэга текста ip устройства из базы данных
-            res = requests.post(smart_home_baseurl + '/data', json={'function': 'get_ip_by_name', 'relayname': mayby_relay_name}) 
+            res = requests.post(smart_home_baseurl + '/data', json={'function': 'get_ip_by_name', 'relayname': mayby_relay_name})
             responseText = res.json()
         except Exception as err:
             self.log.error('ERROR: Failed to get device: {}'.format(err))
@@ -211,5 +211,7 @@ class Skill():
                 text_answer = voice_answer = 'Ошибка запроса к API'
         else:
             text_answer = voice_answer = 'Я не смогла определить нужное устройство'
+
+        self.log.debug('RELAY FUNCTION FINISHED')
         return text_answer, voice_answer
 
