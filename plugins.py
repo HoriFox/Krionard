@@ -191,7 +191,7 @@ class Skill():
 		self.log.debug('ДЕЙСТВИЕ: RELAY FUNCTION ENTRY POINT')
 		stage = token_instruction[0]
 		mayby_relay_name = ' '.join(unknown_tokens)
-		text_answer, voice_answer = '', ''
+		text_answer, voice_answer = 'готово', 'готово'
 		smart_home_baseurl = 'http://{}:{}'.format(self.config['smarthome_addr'], self.config['smarthome_port'])
 
 		try:
