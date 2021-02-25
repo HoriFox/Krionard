@@ -67,7 +67,12 @@ class Skill():
 
 		#Если инструкции пустые, то спросить, что пользователь хочет
 		if len(token_instruction) == 0:
-			text_answer, voice_answer = self.output_conf(theme='canihelp', prof=profile)
+			if len(unknown_tokens) == 0 or len(unknown_tokens) == 1 and unknown_tokens[0] == '':
+				text_answer, voice_answer = self.output_conf(theme='canihelp', prof=profile)
+			else:
+				self.log.info('ВЫВОД: не поняла команду, странная комбинация')
+				text_answer = voice_answer = random.choice(self.vocabulary['output']['dontunderstand'])
+
 			#self.session.new_session(user_id)
 		else:
 			is_end_dialog = True
@@ -163,7 +168,6 @@ class Skill():
 			pass
 		else:
 			command_worked = True
-
 		if command_worked == False:
 			self.log.info('ВЫВОД: не поняла команду, странная комбинация')
 			text_answer = voice_answer = random.choice(self.vocabulary['output']['dontunderstand'])
