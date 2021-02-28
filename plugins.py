@@ -93,7 +93,9 @@ class Skill():
 
 	def output_conf(self, **data):
 		"""
-		Output randomazer by theme
+		Конфигурируемый вывод. Отвечает за вывод информации по указанной
+		теме по заданному алгоритму, в основном, по стучайному выбору из
+		списка заранее указанных ответов.
 		"""
 		random.seed()
 		text_answer, voice_answer = None, None
@@ -122,7 +124,9 @@ class Skill():
 
 	def get_profile(self, user_id):
 		"""
-		Получаем всю информацию о пользователе, что производит запрос
+		Получаем всю информацию о пользователе, что производит запрос.
+		Для расширения возможностей по уникальному ответу тому или иному
+		пользователю.
 		"""
 		link = DBConnection(user=self.config['user_mysql'],
 							password=self.config['password_mysql'],
@@ -137,7 +141,9 @@ class Skill():
 
 	def slice_instruction(self, tokens):
 		"""
-		Отсекатор технических команд от команды запуска
+		Отсекатор технических команд от команды запуска.
+		[Включи навык Ассоль] включи свет
+		Будет удалено то, что находится в квадратных скобках по слову активации.
 		"""
 		main_instruction = []
 		nameskill = self.config['skillname']
@@ -150,6 +156,7 @@ class Skill():
 	def switch_command(self, user_id, token_instruction, unknown_tokens):
 		"""
 		Метод переключения между командами.
+		Пытается выполнить команду из заранее указанного списка.
 		"""
 		instruction = ' '.join(token_instruction)
 		function = {'turnon debug' : self.debug_param,
@@ -177,8 +184,8 @@ class Skill():
 	def debug_param(self, user_id, token_instruction, unknown_tokens):
 		stage = token_instruction[0]
 		valueDebug = 'true' if stage == 'turnon' else 'false'
-		result = self.session.edit_session(user_id, 'debug', valueDebug)
-		self.log.info('ВЫВОД: Режим отладки: %s, SessionOK: %s' % (valueDebug, result))
+		# result = self.session.edit_session(user_id, 'debug', valueDebug)
+		# self.log.info('ВЫВОД: Режим отладки: %s, SessionOK: %s' % (valueDebug, result))
 		text_answer = voice_answer = '%s режим отладки' % (valueDebug)
 		return text_answer, voice_answer
 
@@ -188,37 +195,30 @@ class Skill():
 		return text_answer, voice_answer
 
 	def relay(self, user_id, token_instruction, unknown_tokens):
+		"""
+		Отдаём команду и по ответу от smarthome производим голосовую часть
+		выполнения команды.
+		"""
 		self.log.debug('ДЕЙСТВИЕ: RELAY FUNCTION ENTRY POINT')
 		stage = token_instruction[0]
-		mayby_relay_name = ' '.join(unknown_tokens)
-		text_answer, voice_answer = 'готово', 'готово'
+		relay_name = ' '.join(unknown_tokens)
 		smart_home_baseurl = 'http://{}:{}'.format(self.config['smarthome_addr'], self.config['smarthome_port'])
-
+		value_relay = '1' if stage == 'turnon' else '0'
+		text_answer = voice_answer = ''
 		try:
-			# Узнаем по кусочку дополнительного после тэга текста ip устройства из базы данных
-			res = requests.post(smart_home_baseurl + '/data', json={'function': 'get_ip_by_name', 'relayname': mayby_relay_name})
-			responseText = res.json()
+			res = requests.post(smart_home_baseurl, json={'type': 'relay', 'name': relay_name, 'value': value_relay})
+			if res.text == 'good':
+				self.log.info('ВЫВОД: %s реле' % (stage))
+				text_answer, voice_answer = 'готово', 'готово'
+			elif res.text == 'error-connection-ip':
+				self.log.info('ВЫВОД: smarthome не смогл обратиться по найденному IP адресу')
+				text_answer = voice_answer = random.choice(self.vocabulary['output']['couldnotapply'])
+			elif res.text == 'didnt-find-unique-device':
+				self.log.info('ВЫВОД: smarthome не смог найти уникальное устройство')
+				text_answer = voice_answer = random.choice(self.vocabulary['output']['didnotfind'])
 		except Exception as err:
-			self.log.error('OШИБКА: Failed to get device: {}'.format(err))
-			responseText = []
-
-		# Если устройство найдено в единичном варианте, значит он нашёл более-менее похожее (не 0 и не много, а 1)
-		if len(responseText) == 1:
-			ip_module = responseText[0]['ModuleIp']
-			self.log.info('LOGIC: Полученное по токену [%s] IP устройства [%s]' % (mayby_relay_name, ip_module))
-			valueRelay = '1' if stage == 'turnon' else '0'
-			try:
-				res = requests.post(smart_home_baseurl, json={'type': 'relay', 'ip': ip_module, 'value': valueRelay})
-				if res.text == 'good':
-					self.log.info('ВЫВОД: %s реле' % (stage))
-				elif res.text == 'error-connection-ip':
-					self.log.info('ВЫВОД: не смогла обратиться по IP адресу')
-					text_answer = voice_answer = random.choice(self.vocabulary['output']['couldnotapply'])
-			except Exception as err:
-				self.log.error('ОШИБКА: Failed to update device state: {}', err)
-				text_answer = voice_answer = 'Ошибка запроса к API'
-		else:
-			text_answer = voice_answer = random.choice(self.vocabulary['output']['didnotfind'])
+			self.log.error('ОШИБКА: Failed to update device state: {}', err)
+			text_answer = voice_answer = 'Ошибка запроса к API'
 
 		self.log.debug('ДЕЙСТВИЕ: RELAY FUNCTION FINISHED')
 		return text_answer, voice_answer
