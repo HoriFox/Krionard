@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "client_id": "MailRu-VC/1.0",
+    "locale": "ru_RU",
+    "timezone": "Europe/Moscow",
+    "interfaces": {
+      "screen": {}
+      }
+   },
+  "request": {
+    "command": "какая очередь в столовой",
+    "original_utterance": "какая очередь в столовой",
+    "type": "SimpleUtterance",
+    "payload": {},
+    "nlu": {
+      "tokens": [
+        "какая", "очередь", "в", "столовой"
+      ]
+    }
+  },
+  "session": {
+    "session_id": "574d41e0-a41e-4028-a73a-6f5b5bfed299",
+    "user_id": "11c5d2e04b28077d3b2a385b8c332b2f3f261fab10e88b539512e68ccd80a294",
+    "skill_id": "6861e5a9-4e0f-4660-9331-01f720ddaf5d",
+    "new": true,
+    "message_id": 0
+  },
+  "version": "1.0"
+}
+
+
