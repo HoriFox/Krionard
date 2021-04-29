@@ -10,7 +10,10 @@ import sys
 
 parser = argparse.ArgumentParser(description='Marusya skill unittest executor')
 parser.add_argument('-t', '--text', metavar='TEXT', type=str,
-                    default='включи навык ассоль включи свет',
+                    default='включи навык ассоль включи',
+                    help='Command string from Marusya')
+parser.add_argument('-d', '--device', metavar='DEVICE', type=str,
+                    default='свет',
                     help='Command string from Marusya')
 parser.add_argument('-c', '--count', metavar='N', type=int,
                     default=1,
@@ -49,4 +52,4 @@ def post_test(message = None):
 
 if __name__ == "__main__":
     for i in range(args.count):
-        post_test(args.text)
+        post_test(args.text + ' ' + args.device)
