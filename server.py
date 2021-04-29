@@ -34,6 +34,10 @@ class FlaskServer (Flask):
 				'skillname': 'ассоль',
 				'smarthome_addr': '127.0.0.1',
 				'smarthome_port': 4050,
+				'smarthome_auth': None,
+				'smarthome_schema': 'http',
+				'smarthome_user': 'user',
+				'smarthome_pass': 'pass',
 		}
 		load_status = True
 		try:

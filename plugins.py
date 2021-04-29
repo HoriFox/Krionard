@@ -202,11 +202,17 @@ class Skill():
 		self.log.debug('ДЕЙСТВИЕ: RELAY FUNCTION ENTRY POINT')
 		stage = token_instruction[0]
 		relay_name = ' '.join(unknown_tokens)
-		smart_home_baseurl = 'http://{}:{}'.format(self.config['smarthome_addr'], self.config['smarthome_port'])
+		# TODO(m.kucherenko): create authentication method with multiple options
+		if self.config['smarthome_auth'] == 'basic_auth':
+			auth = '{}:{}@'.format(self.config['smarthome_user'], self.config['smarthome_pass'])
+		else:
+			auth = ''
+		smart_home_baseurl = '{}://{}{}:{}'.format(self.config['smarthome_schema'], auth, self.config['smarthome_addr'], self.config['smarthome_port'])
 		value_relay = '1' if stage == 'turnon' else '0'
 		text_answer = voice_answer = ''
 		try:
 			res = requests.post(smart_home_baseurl, json={'type': 'relay', 'name': relay_name, 'value': value_relay})
+			res.raise_for_status() # To catch bad requests (not 2xx codes) in except block
 			if res.text == 'good':
 				self.log.info('ВЫВОД: %s реле' % (stage))
 				text_answer, voice_answer = 'готово', 'готово'
