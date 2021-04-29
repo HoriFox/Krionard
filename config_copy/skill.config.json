@@ -1,0 +1,16 @@
+{
+	"host_redis": "127.0.0.1",
+	"port_redis": 6380,
+	"user_mysql": "mysql_username",
+	"password_mysql": "mysql_password",
+	"host_mysql": "127.0.0.1",
+	"port_mysql": 3306,
+	"database_mysql": "marusyatech",
+	"skillname": "ассоль",
+	"smarthome_addr": "smarthome.assol.ml",
+	"smarthome_port": 443,
+        "smarthome_auth": "basic_auth",
+	"smarthome_schema": "https",
+        "smarthome_user": "smarthome_username",
+        "smarthome_pass": "smarthome_password"
+}
