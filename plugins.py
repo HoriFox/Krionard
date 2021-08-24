@@ -196,18 +196,18 @@ class Skill():
 
 	def relay(self, user_id, token_instruction, unknown_tokens):
 		"""
-		Отдаём команду и по ответу от smarthome производим голосовую часть
+		Отдаём команду и по ответу от dacrover производим голосовую часть
 		выполнения команды.
 		"""
 		self.log.debug('ДЕЙСТВИЕ: RELAY FUNCTION ENTRY POINT')
 		stage = token_instruction[0]
 		relay_name = ' '.join(unknown_tokens)
 		# TODO(m.kucherenko): create authentication method with multiple options
-		if self.config['smarthome_auth'] == 'basic_auth':
-			auth = '{}:{}@'.format(self.config['smarthome_user'], self.config['smarthome_pass'])
+		if self.config['dacrover_auth'] == 'basic_auth':
+			auth = '{}:{}@'.format(self.config['dacrover_user'], self.config['dacrover_pass'])
 		else:
 			auth = ''
-		smart_home_baseurl = '{}://{}{}:{}'.format(self.config['smarthome_schema'], auth, self.config['smarthome_addr'], self.config['smarthome_port'])
+		smart_home_baseurl = '{}://{}{}:{}'.format(self.config['dacrover_schema'], auth, self.config['dacrover_addr'], self.config['dacrover_port'])
 		value_relay = '1' if stage == 'turnon' else '0'
 		text_answer = voice_answer = ''
 		try:
@@ -217,10 +217,10 @@ class Skill():
 				self.log.info('ВЫВОД: %s реле' % (stage))
 				text_answer, voice_answer = 'готово', 'готово'
 			elif res.text == 'error-connection-ip':
-				self.log.info('ВЫВОД: smarthome не смогл обратиться по найденному IP адресу')
+				self.log.info('ВЫВОД: dacrover не смогл обратиться по найденному IP адресу')
 				text_answer = voice_answer = random.choice(self.vocabulary['output']['couldnotapply'])
 			elif res.text == 'didnt-find-unique-device':
-				self.log.info('ВЫВОД: smarthome не смог найти уникальное устройство')
+				self.log.info('ВЫВОД: dacrover не смог найти уникальное устройство')
 				text_answer = voice_answer = random.choice(self.vocabulary['output']['didnotfind'])
 		except Exception as err:
 			self.log.error('ОШИБКА: Failed to update device state: {}', err)

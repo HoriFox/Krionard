@@ -26,18 +26,18 @@ class FlaskServer (Flask):
 		skill_config = {
 				'host_redis': '127.0.0.1',
 				'port_redis': 6379,
-				'user_mysql': 'marusyatech',
+				'user_mysql': 'krionardtech',
 				'password_mysql': 'password',
 				'host_mysql': '127.0.0.1',
 				'port_mysql': 3306,
-				'database_mysql': 'marusyatech',
+				'database_mysql': 'krionardtech',
 				'skillname': 'ассоль',
-				'smarthome_addr': '127.0.0.1',
-				'smarthome_port': 4050,
-				'smarthome_auth': None,
-				'smarthome_schema': 'http',
-				'smarthome_user': 'user',
-				'smarthome_pass': 'pass',
+				'dacrover_addr': '127.0.0.1',
+				'dacrover_port': 4050,
+				'dacrover_auth': None,
+				'dacrover_schema': 'http',
+				'dacrover_user': 'user',
+				'dacrover_pass': 'pass',
 		}
 		load_status = True
 		try:

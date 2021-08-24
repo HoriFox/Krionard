@@ -5,12 +5,12 @@
 	"password_mysql": "mysql_password",
 	"host_mysql": "127.0.0.1",
 	"port_mysql": 3306,
-	"database_mysql": "marusyatech",
+	"database_mysql": "krionardtech",
 	"skillname": "ассоль",
-	"smarthome_addr": "smarthome.assol.ml",
-	"smarthome_port": 443,
-        "smarthome_auth": "basic_auth",
-	"smarthome_schema": "https",
-        "smarthome_user": "smarthome_username",
-        "smarthome_pass": "smarthome_password"
+	"dacrover_addr": "dacrover.assol.ml",
+	"dacrover_port": 443,
+        "dacrover_auth": "basic_auth",
+	"dacrover_schema": "https",
+        "dacrover_user": "dacrover_username",
+        "dacrover_pass": "dacrover_password"
 }
