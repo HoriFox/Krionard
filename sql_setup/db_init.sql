@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS `marusyatech`;
-CREATE DATABASE `marusyatech`;
-USE `marusyatech`;
+DROP DATABASE IF EXISTS `krionardtech`;
+CREATE DATABASE `krionardtech`;
+USE `krionardtech`;
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
