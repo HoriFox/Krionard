@@ -1,7 +1,7 @@
-# MarusyaSkill
-### Webhook для работы голосового ассистента Маруси
+# Krionard
+### Webhook для работы голосовых ассистентов
 
 [Пример конфига](config_copy/skill.config.json)
 
 ***
-![Начало работы с ботом](https://github.com/HoriFox/SmartHomeApi/blob/master/gitimg/Схема.png)
+![Схема](https://github.com/HoriFox/SmartHomeCentralDoc/blob/main/gitimg/system.png)
