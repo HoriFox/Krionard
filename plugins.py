@@ -15,11 +15,9 @@ class Skill():
 		self.vocabulary = vocabulary
 		self.log = logger
 
-	def run_skill(self):
-		self.log.info('\n--> REQUEST CAME')
-		start_time = time.time()
+	def run_marusya_proxy(self):
 		json_request = request.json
-		text_answer, text_answer_tts, is_end_session = self.compute_module(json_request)
+		text_answer, text_answer_tts, _, is_end_session = self.run_skill(json_request)
 		answer = {
 			"response": {
 				"text": text_answer,
@@ -30,24 +28,46 @@ class Skill():
 				"message_id": json_request['session']['message_id'],
 				"user_id": json_request['session']['user_id']},
 			"version": json_request['version']}
-		delta_time = time.time() - start_time
-		self.log.info('ОТЧЁТ: DELTA TIME WORK: %s s', delta_time)
-		self.log.info('<-- SEND RESPONSE')
+		self.log.info('<-- SEND RESPONSE MARUSYA')
 		return jsonify(answer)
 
+	def run_omega_proxy(self):
+		json_request = request.json
+		text_answer, text_answer_tts, answer_code, is_end_session = self.run_skill(json_request)
+		answer = {
+			"response": {
+				"code": answer_code,
+				"text": text_answer,
+				"tts": text_answer_tts},
+			"session": {
+				"user_id": json_request['session']['user_id']}
+				}
+		self.log.info('<-- SEND RESPONSE OMEGA')
+		return jsonify(answer)
+
+	def run_skill(self, json_request):
+		self.log.info('\n--> REQUEST CAME')
+		start_time = time.time()
+		text_answer, text_answer_tts, answer_code, is_end_session = self.compute_module(json_request)
+		delta_time = time.time() - start_time
+		self.log.info('ОТЧЁТ: DELTA TIME WORK: %s s', delta_time)
+		return text_answer, text_answer_tts, answer_code, is_end_session
+
 	def get_info(self):
-		return jsonify({'endpoints': [{'POST /': 'Marusya\'s skill API'}, {'GET /': 'Info'}]})
+		return jsonify({'endpoints': [{'POST /': 'Marusya\'s proxy skill API'}, {'POST /omega': 'Omega\'s proxy skill API'}, {'GET /': 'Info'}]})
 
 	def compute_module(self, request_data):
 		text_answer = ''
 		voice_answer = ''
+		code_answer = -1
 		is_end_dialog = False
 
 		#[Абсолютный вызод]End word: "Стоп", "выход" and e.t.c
 		if request_data['request']['command'] == 'on_interrupt':
 			self.log.info('ВЫВОД: выход из навыка Ассоль')
 			text_answer, voice_answer = self.output_conf(theme='bye')
-			return text_answer, voice_answer, True
+			code_answer = 0
+			return text_answer, voice_answer, code_answer, True
 
 		#Получаем данные пользователя
 		user_id = request_data['session']['user_id']
@@ -69,14 +89,16 @@ class Skill():
 		if len(token_instruction) == 0:
 			if len(unknown_tokens) == 0 or len(unknown_tokens) == 1 and unknown_tokens[0] == '':
 				text_answer, voice_answer = self.output_conf(theme='canihelp', prof=profile)
+				code_answer = 1
 			else:
 				self.log.info('ВЫВОД: не поняла команду, странная комбинация')
 				text_answer = voice_answer = random.choice(self.vocabulary['output']['dontunderstand'])
+				code_answer = 2
 
 			#self.session.new_session(user_id)
 		else:
 			is_end_dialog = True
-			text_answer, voice_answer = self.switch_command(user_id, token_instruction, unknown_tokens)
+			text_answer, voice_answer, code_answer = self.switch_command(user_id, token_instruction, unknown_tokens)
 
 			#Добавочная информация режима отладки
 			#session_profile = self.session.get_session(user_id)
@@ -89,7 +111,7 @@ class Skill():
 			#	self.session.edit_session(user_id, 'history', instruction)
 
 		self.log.debug('COMPUTE MODULE FINISHED')
-		return text_answer, voice_answer, is_end_dialog
+		return text_answer, voice_answer, code_answer, is_end_dialog
 
 	def output_conf(self, **data):
 		"""
@@ -99,17 +121,21 @@ class Skill():
 		"""
 		random.seed()
 		text_answer, voice_answer = None, None
+		code_answer = -1
 
 		if data['theme'] == 'canihelp':
 			name = data['prof'][1] if data['prof'] != None else str()
 			name_start, name_end = (name + ' ', str()) if random.randint(0, 1) else (str(), ' ' + name)
 			text_answer = voice_answer = name_start + random.choice(self.vocabulary['output']['canihelp']) + name_end + '?'
+			code_answer = 1
 
 		if data['theme'] == 'whatican':
 			text_answer = voice_answer = self.vocabulary['output']['whatican']
+			code_answer = 4
 
 		if data['theme'] == 'bye':
 			text_answer = voice_answer = random.choice(self.vocabulary['output']['bye'])
+			code_answer = 0
 
 		if data['theme'] == 'debug':
 			answer = '. \nDEBUG \nCOMMAND: {}.'.format(data['ins'])
@@ -119,8 +145,9 @@ class Skill():
 				answer += '\nLAST COMMAND: ' + data['history']
 			text_answer = data['text'] + answer if data['text'] is not None else answer
 			voice_answer = data['voice'] + answer if data['voice'] is not None else answer
+			code_answer = 5
 
-		return text_answer, voice_answer
+		return text_answer, voice_answer, code_answer
 
 	def get_profile(self, user_id):
 		"""
@@ -167,9 +194,10 @@ class Skill():
 				}
 
 		text_answer, voice_answer = '', ''
+		code_answer = -1
 		command_worked = False
 		try:
-			text_answer, voice_answer = function[instruction](user_id, token_instruction, unknown_tokens)
+			text_answer, voice_answer, code_answer = function[instruction](user_id, token_instruction, unknown_tokens)
 		except KeyError:
 			# default block switch
 			pass
@@ -178,8 +206,9 @@ class Skill():
 		if command_worked == False:
 			self.log.info('ВЫВОД: не поняла команду, странная комбинация')
 			text_answer = voice_answer = random.choice(self.vocabulary['output']['dontunderstand'])
+			code_answer = 2
 
-		return text_answer, voice_answer
+		return text_answer, voice_answer, code_answer
 
 	def debug_param(self, user_id, token_instruction, unknown_tokens):
 		stage = token_instruction[0]
@@ -187,12 +216,13 @@ class Skill():
 		# result = self.session.edit_session(user_id, 'debug', valueDebug)
 		# self.log.info('ВЫВОД: Режим отладки: %s, SessionOK: %s' % (valueDebug, result))
 		text_answer = voice_answer = '%s режим отладки' % (valueDebug)
-		return text_answer, voice_answer
+		code_answer = 6
+		return text_answer, voice_answer, code_answer
 
 	def what_can(self, user_id, token_instruction, unknown_tokens):
 		self.log.info('ВЫВОД: Отвечает, что Ассоль умеет')
-		text_answer, voice_answer = self.output_conf(theme='whatican')
-		return text_answer, voice_answer
+		text_answer, voice_answer, code_answer = self.output_conf(theme='whatican')
+		return text_answer, voice_answer, code_answer
 
 	def relay(self, user_id, token_instruction, unknown_tokens):
 		"""
@@ -210,22 +240,27 @@ class Skill():
 		smart_home_baseurl = '{}://{}{}:{}'.format(self.config['dacrover_schema'], auth, self.config['dacrover_addr'], self.config['dacrover_port'])
 		value_relay = '1' if stage == 'turnon' else '0'
 		text_answer = voice_answer = ''
+		code_answer = -1
 		try:
 			res = requests.post(smart_home_baseurl, json={'type': 'relay', 'name': relay_name, 'value': value_relay})
 			res.raise_for_status() # To catch bad requests (not 2xx codes) in except block
 			if res.text == 'good':
 				self.log.info('ВЫВОД: %s реле' % (stage))
 				text_answer, voice_answer = 'готово', 'готово'
+				code_answer = 7
 			elif res.text == 'error-connection-ip':
 				self.log.info('ВЫВОД: dacrover не смогл обратиться по найденному IP адресу')
 				text_answer = voice_answer = random.choice(self.vocabulary['output']['couldnotapply'])
+				code_answer = 8
 			elif res.text == 'didnt-find-unique-device':
 				self.log.info('ВЫВОД: dacrover не смог найти уникальное устройство')
 				text_answer = voice_answer = random.choice(self.vocabulary['output']['didnotfind'])
+				code_answer = 9
 		except Exception as err:
 			self.log.error('ОШИБКА: Failed to update device state: {}', err)
 			text_answer = voice_answer = 'Ошибка запроса к API'
+			code_answer = 10
 
 		self.log.debug('ДЕЙСТВИЕ: RELAY FUNCTION FINISHED')
-		return text_answer, voice_answer
+		return text_answer, voice_answer, code_answer
 

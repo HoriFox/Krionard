@@ -95,7 +95,8 @@ class FlaskServer (Flask):
 		"""
 		Устанавливаем маршрутизацию обращений на сервер.
 		"""
-		self.add_url_rule('/', "run_skill", self.skill.run_skill, methods=['POST'])
+		self.add_url_rule('/', "run_marusya_proxy", self.skill.run_marusya_proxy, methods=['POST'])
+		self.add_url_rule('/omega/', "run_omega_proxy", self.skill.run_omega_proxy, methods=['POST'])
 		self.add_url_rule('/', "get_info", self.skill.get_info, methods=['GET'])
 
 def create_app(config_file, vocabulary_file):
